@@ -1,0 +1,6 @@
+@Back_End_tb4_HostAddress = http://localhost:5293
+
+GET {{Back_End_tb4_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
