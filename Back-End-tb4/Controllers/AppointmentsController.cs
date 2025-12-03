@@ -36,6 +36,10 @@ public class AppointmentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<BaseResponse<Appointment>>> Create(Appointment appointment)
     {
+        // Asignar valores por defecto
+        appointment.Status = appointment.Status ?? "confirmed";
+        appointment.CreatedAt = DateTime.UtcNow;
+
         await _appointmentRepository.AddAsync(appointment);
         await _appointmentRepository.SaveChangesAsync();
 
@@ -51,10 +55,15 @@ public class AppointmentsController : ControllerBase
         if (existing == null)
             return NotFound(BaseResponse<Appointment>.Fail("Cita no encontrada"));
 
-        existing.UserId        = appointment.UserId;
+        // Actualizar campos
         existing.PsychologistId = appointment.PsychologistId;
-        existing.DateTime      = appointment.DateTime;
-        existing.Status        = appointment.Status;
+        existing.PsychologistName = appointment.PsychologistName;
+        existing.PatientId = appointment.PatientId;
+        existing.PatientName = appointment.PatientName;
+        existing.Date = appointment.Date;
+        existing.Time = appointment.Time;
+        existing.Notes = appointment.Notes;
+        existing.Status = appointment.Status;
 
         _appointmentRepository.Update(existing);
         await _appointmentRepository.SaveChangesAsync();
@@ -73,5 +82,25 @@ public class AppointmentsController : ControllerBase
         await _appointmentRepository.SaveChangesAsync();
 
         return Ok(BaseResponse<string>.Ok("Cita eliminada correctamente"));
+    }
+
+    // Nuevo endpoint: Obtener citas por paciente
+    [HttpGet("patient/{patientId:int}")]
+    public async Task<ActionResult<BaseResponse<IEnumerable<Appointment>>>> GetByPatient(int patientId)
+    {
+        var appointments = await _appointmentRepository.ListAsync();
+        var patientAppointments = appointments.Where(a => a.PatientId == patientId).ToList();
+            
+        return Ok(BaseResponse<IEnumerable<Appointment>>.Ok(patientAppointments));
+    }
+
+    // Nuevo endpoint: Obtener citas por psicólogo
+    [HttpGet("psychologist/{psychologistId:int}")]
+    public async Task<ActionResult<BaseResponse<IEnumerable<Appointment>>>> GetByPsychologist(int psychologistId)
+    {
+        var appointments = await _appointmentRepository.ListAsync();
+        var psychologistAppointments = appointments.Where(a => a.PsychologistId == psychologistId).ToList();
+            
+        return Ok(BaseResponse<IEnumerable<Appointment>>.Ok(psychologistAppointments));
     }
 }

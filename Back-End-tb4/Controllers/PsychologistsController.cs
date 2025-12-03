@@ -20,6 +20,11 @@ public class PsychologistsController : ControllerBase
     public async Task<ActionResult<BaseResponse<IEnumerable<Psychologist>>>> GetAll()
     {
         var items = await _psychologistRepository.ListAsync();
+        // Ocultar contraseñas
+        foreach (var psychologist in items)
+        {
+            psychologist.Password = null;
+        }
         return Ok(BaseResponse<IEnumerable<Psychologist>>.Ok(items));
     }
 
@@ -30,18 +35,37 @@ public class PsychologistsController : ControllerBase
         if (item == null)
             return NotFound(BaseResponse<Psychologist>.Fail("Psicólogo no encontrado"));
 
+        item.Password = null;
         return Ok(BaseResponse<Psychologist>.Ok(item));
     }
 
     [HttpPost]
     public async Task<ActionResult<BaseResponse<Psychologist>>> Create(Psychologist psychologist)
     {
+        // Asignar valores por defecto
+        psychologist.Tipo = "psicologo";
+        psychologist.Calificacion = psychologist.Calificacion == 0 ? 5 : psychologist.Calificacion;
+
         await _psychologistRepository.AddAsync(psychologist);
         await _psychologistRepository.SaveChangesAsync();
 
+        psychologist.Password = null;
         return CreatedAtAction(nameof(GetById),
             new { id = psychologist.Id },
             BaseResponse<Psychologist>.Ok(psychologist, "Psicólogo creado"));
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<BaseResponse<Psychologist>>> Login([FromBody] PsychologistLoginRequest request)
+    {
+        var psychologists = await _psychologistRepository.ListAsync();
+        var psychologist = psychologists.FirstOrDefault(p => p.Email == request.Email && p.Password == request.Password);
+            
+        if (psychologist == null)
+            return Unauthorized(BaseResponse<Psychologist>.Fail("Credenciales inválidas"));
+
+        psychologist.Password = null;
+        return Ok(BaseResponse<Psychologist>.Ok(psychologist, "Login exitoso"));
     }
 
     [HttpPut("{id:int}")]
@@ -51,14 +75,28 @@ public class PsychologistsController : ControllerBase
         if (existing == null)
             return NotFound(BaseResponse<Psychologist>.Fail("Psicólogo no encontrado"));
 
-        existing.FullName    = psychologist.FullName;
-        existing.Specialty   = psychologist.Specialty;
-        existing.Description = psychologist.Description;
-        existing.Rating      = psychologist.Rating;
+        // Actualizar campos
+        existing.Nombre = psychologist.Nombre;
+        existing.Email = psychologist.Email;
+        if (!string.IsNullOrEmpty(psychologist.Password))
+            existing.Password = psychologist.Password;
+        existing.Especialidad = psychologist.Especialidad;
+        existing.Calificacion = psychologist.Calificacion;
+        existing.Imagen = psychologist.Imagen;
+        existing.Descripcion = psychologist.Descripcion;
+        existing.Biografia = psychologist.Biografia;
+        existing.Educacion = psychologist.Educacion;
+        existing.Certificaciones = psychologist.Certificaciones;
+        existing.Idiomas = psychologist.Idiomas;
+        existing.Metodologias = psychologist.Metodologias;
+        existing.AnosExperiencia = psychologist.AnosExperiencia;
+        existing.AtendeEdades = psychologist.AtendeEdades;
+        existing.Horarios = psychologist.Horarios;
 
         _psychologistRepository.Update(existing);
         await _psychologistRepository.SaveChangesAsync();
 
+        existing.Password = null;
         return Ok(BaseResponse<Psychologist>.Ok(existing, "Psicólogo actualizado"));
     }
 
@@ -74,4 +112,10 @@ public class PsychologistsController : ControllerBase
 
         return Ok(BaseResponse<string>.Ok("Psicólogo eliminado correctamente"));
     }
+}
+
+public class PsychologistLoginRequest
+{
+    public string Email { get; set; }
+    public string Password { get; set; }
 }

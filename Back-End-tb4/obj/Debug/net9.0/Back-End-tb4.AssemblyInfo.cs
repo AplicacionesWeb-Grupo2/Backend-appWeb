@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Back-End-tb4")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78fdce534f3c256227e8387acf44879a5dcb3db1")]
 [assembly: System.Reflection.AssemblyProductAttribute("Back-End-tb4")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Back-End-tb4")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
